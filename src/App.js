@@ -162,20 +162,35 @@ function App() {
           onClick={() => !activeInput && !isMenuGesture && handleSideClick('loss')}
         >
           {activeInput === 'loss' && (
-            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+            <div className="input-container">
               <input
                 type="tel"
                 inputMode="decimal"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 onKeyDown={handleInputKeyDown}
-                onBlur={handleInputBlur}
+                onBlur={(e) => {
+                  // Submit if there's a value when losing focus
+                  if (amount && amount.trim()) {
+                    handleSubmit();
+                  } else {
+                    handleInputBlur();
+                  }
+                }}
                 onTouchEnd={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
                 className="inline-input red-input"
                 autoFocus
               />
-            </form>
+              <button 
+                type="button"
+                onClick={handleSubmit}
+                className="submit-overlay-btn"
+                style={{ display: amount ? 'block' : 'none' }}
+              >
+                ✓
+              </button>
+            </div>
           )}
         </div>
         
@@ -190,20 +205,35 @@ function App() {
           onClick={() => !activeInput && !isMenuGesture && handleSideClick('win')}
         >
           {activeInput === 'win' && (
-            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+            <div className="input-container">
               <input
                 type="tel"
                 inputMode="decimal"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 onKeyDown={handleInputKeyDown}
-                onBlur={handleInputBlur}
+                onBlur={(e) => {
+                  // Submit if there's a value when losing focus
+                  if (amount && amount.trim()) {
+                    handleSubmit();
+                  } else {
+                    handleInputBlur();
+                  }
+                }}
                 onTouchEnd={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
                 className="inline-input green-input"
                 autoFocus
               />
-            </form>
+              <button 
+                type="button"
+                onClick={handleSubmit}
+                className="submit-overlay-btn"
+                style={{ display: amount ? 'block' : 'none' }}
+              >
+                ✓
+              </button>
+            </div>
           )}
         </div>
       </div>
