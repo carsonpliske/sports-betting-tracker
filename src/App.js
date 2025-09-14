@@ -9,7 +9,6 @@ function App() {
   const [activeInput, setActiveInput] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedSport, setSelectedSport] = useState('NBA');
-  const [menuVisible, setMenuVisible] = useState(false);
   const [touchStartY, setTouchStartY] = useState(0);
   const [menuOffset, setMenuOffset] = useState(-100);
   useEffect(() => {
@@ -68,25 +67,19 @@ function App() {
     if (touchStartY < 50 && deltaY > 0) {
       const offset = Math.min(deltaY - 50, 150);
       setMenuOffset(-100 + (offset / 150) * 100);
-      if (offset > 50) {
-        setMenuVisible(true);
-      }
     }
   };
 
   const handleTouchEnd = () => {
     if (menuOffset > -50) {
       setMenuOffset(0);
-      setMenuVisible(true);
     } else {
       setMenuOffset(-100);
-      setMenuVisible(false);
     }
   };
 
   const handleSportSelect = (sport) => {
     setSelectedSport(sport);
-    setMenuVisible(false);
     setMenuOffset(-100);
   };
 
