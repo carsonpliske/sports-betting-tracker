@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Cropper</title>
+</head>
+<body>
+    <canvas id="canvas" width="512" height="512"></canvas>
+    <br>
+    <button onclick="downloadImage()">Download Cropped Icon</button>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const img = new Image();
+        img.onload = function() {
+            // Calculate crop area to remove white padding
+            const cropMargin = 50; // Remove ~50px of white padding on each side
+            const sourceSize = img.width - (cropMargin * 2);
+            
+            // Draw the cropped image, scaling to fill the canvas
+            ctx.drawImage(
+                img, 
+                cropMargin, cropMargin, sourceSize, sourceSize, // Source crop area
+                0, 0, 512, 512 // Destination area (full canvas)
+            );
+        };
+        img.src = '../TrackerIcon.png';
+        
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'TrackerIcon-cropped.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
