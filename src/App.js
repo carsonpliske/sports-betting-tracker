@@ -11,6 +11,7 @@ function App() {
   const [selectedSport, setSelectedSport] = useState('NBA');
   const [touchStartY, setTouchStartY] = useState(0);
   const [menuOffset, setMenuOffset] = useState(-100);
+  const [isMenuGesture, setIsMenuGesture] = useState(false);
   useEffect(() => {
     localStorage.setItem('betting-transactions', JSON.stringify(transactions));
   }, [transactions]);
@@ -58,6 +59,7 @@ function App() {
 
   const handleTouchStart = (e) => {
     setTouchStartY(e.touches[0].clientY);
+    setIsMenuGesture(false);
   };
 
   const handleTouchMove = (e) => {
@@ -67,12 +69,14 @@ function App() {
     // Pull down from top to open menu
     if (touchStartY < 50 && deltaY > 0) {
       e.preventDefault(); // Prevent default scroll behavior
+      setIsMenuGesture(true);
       const offset = Math.min(deltaY - 50, 150);
       setMenuOffset(-100 + (offset / 150) * 100);
     }
     // Swipe up when menu is open to close it
     else if (menuOffset > -100 && deltaY < 0) {
       e.preventDefault(); // Prevent default scroll behavior
+      setIsMenuGesture(true);
       const closeOffset = Math.max(menuOffset + (deltaY / 150) * 100, -100);
       setMenuOffset(closeOffset);
     }
@@ -84,6 +88,8 @@ function App() {
     } else {
       setMenuOffset(-100);
     }
+    // Reset gesture flag after a brief delay to ensure touch events don't interfere
+    setTimeout(() => setIsMenuGesture(false), 100);
   };
 
   const handleSportSelect = (sport) => {
@@ -129,7 +135,7 @@ function App() {
       </div>
       
       <div className="split-container">
-        <div className="side red-side" onClick={() => !activeInput && handleSideClick('loss')}>
+        <div className="side red-side" onClick={() => !activeInput && !isMenuGesture && handleSideClick('loss')}>
           {activeInput === 'loss' && (
             <input
               type="tel"
@@ -145,7 +151,7 @@ function App() {
           )}
         </div>
         
-        <div className="side green-side" onClick={() => !activeInput && handleSideClick('win')}>
+        <div className="side green-side" onClick={() => !activeInput && !isMenuGesture && handleSideClick('win')}>
           {activeInput === 'win' && (
             <input
               type="tel"
