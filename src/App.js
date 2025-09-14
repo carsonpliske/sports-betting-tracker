@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem('betting-transactions');
-    return saved ? JSON.parse(saved) : [];
+  const [allTransactions, setAllTransactions] = useState(() => {
+    const saved = localStorage.getItem('betting-transactions-all');
+    return saved ? JSON.parse(saved) : {};
   });
   const [activeInput, setActiveInput] = useState('');
   const [amount, setAmount] = useState('');
@@ -13,10 +13,12 @@ function App() {
   const [menuOffset, setMenuOffset] = useState(-100);
   const [isMenuGesture, setIsMenuGesture] = useState(false);
   useEffect(() => {
-    localStorage.setItem('betting-transactions', JSON.stringify(transactions));
-  }, [transactions]);
+    localStorage.setItem('betting-transactions-all', JSON.stringify(allTransactions));
+  }, [allTransactions]);
 
-  const total = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+  // Get transactions for current sport
+  const currentTransactions = allTransactions[selectedSport] || [];
+  const total = currentTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
 
   const handleSideClick = (type) => {
     setActiveInput(type);
@@ -24,14 +26,19 @@ function App() {
   };
 
   const handleInputKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === 'Done') {
+    console.log('Key pressed:', e.key);
+    if (e.key === 'Enter') {
       e.preventDefault();
       handleSubmit();
     }
   };
 
   const handleSubmit = () => {
-    if (!amount || !activeInput) return;
+    console.log('Submit called:', { amount, activeInput, selectedSport });
+    if (!amount || !activeInput) {
+      console.log('Submit failed - missing data');
+      return;
+    }
 
     const newTransaction = {
       id: Date.now(),
@@ -41,7 +48,15 @@ function App() {
       date: new Date().toISOString()
     };
 
-    setTransactions([...transactions, newTransaction]);
+    console.log('New transaction:', newTransaction);
+    
+    // Add transaction to the current sport's data
+    const updatedTransactions = {
+      ...allTransactions,
+      [selectedSport]: [...currentTransactions, newTransaction]
+    };
+    
+    setAllTransactions(updatedTransactions);
     setActiveInput('');
     setAmount('');
   };
