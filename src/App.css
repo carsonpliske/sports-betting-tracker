@@ -29,6 +29,14 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 10px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.sport-header:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .logo-placeholder {
@@ -180,7 +188,7 @@
   background: transparent;
 }
 
-/* Hidden Sports Menu */
+/* Sports Menu */
 .sports-menu {
   position: fixed;
   top: 0;
@@ -193,7 +201,12 @@
   align-items: center;
   padding: 20px;
   z-index: 1000;
+  transform: translateY(-100%);
   transition: transform 0.3s ease;
+}
+
+.sports-menu.open {
+  transform: translateY(0);
 }
 
 .sport-option {

@@ -46,9 +46,7 @@ function App() {
 
     return getMostUsedSport();
   });
-  const [touchStartY, setTouchStartY] = useState(0);
-  const [menuOffset, setMenuOffset] = useState(-100);
-  const [isMenuGesture, setIsMenuGesture] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   useEffect(() => {
     localStorage.setItem('betting-transactions-all', JSON.stringify(allTransactions));
   }, [allTransactions]);
@@ -110,54 +108,22 @@ function App() {
     { name: 'UFC', emoji: '🥊' }
   ];
 
-  const handleTouchStart = (e) => {
-    setTouchStartY(e.touches[0].clientY);
-    setIsMenuGesture(false);
-  };
-
-  const handleTouchMove = (e) => {
-    const currentY = e.touches[0].clientY;
-    const deltaY = currentY - touchStartY;
-    
-    // Pull down from top to open menu
-    if (touchStartY < 50 && deltaY > 0) {
-      e.preventDefault(); // Prevent default scroll behavior
-      setIsMenuGesture(true);
-      const offset = Math.min(deltaY - 50, 150);
-      setMenuOffset(-100 + (offset / 150) * 100);
-    }
-    // Swipe up when menu is open to close it
-    else if (menuOffset > -100 && deltaY < 0) {
-      e.preventDefault(); // Prevent default scroll behavior
-      setIsMenuGesture(true);
-      const closeOffset = Math.max(menuOffset + (deltaY / 150) * 100, -100);
-      setMenuOffset(closeOffset);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (menuOffset > -50) {
-      setMenuOffset(0);
-    } else {
-      setMenuOffset(-100);
-    }
-    // Reset gesture flag after a brief delay to ensure touch events don't interfere
-    setTimeout(() => setIsMenuGesture(false), 100);
+  const toggleSportsMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   const handleSportSelect = (sport) => {
     setSelectedSport(sport);
-    setMenuOffset(-100);
+    setIsMenuOpen(false);
   };
 
   const selectedSportData = sports.find(s => s.name === selectedSport);
 
   return (
     <div className="App">
-      {/* Hidden Sports Menu */}
-      <div 
-        className="sports-menu" 
-        style={{ transform: `translateY(${menuOffset}%)` }}
+      {/* Sports Menu */}
+      <div
+        className={`sports-menu ${isMenuOpen ? 'open' : ''}`}
       >
         {sports.map((sport) => (
           <div 
@@ -171,13 +137,8 @@ function App() {
         ))}
       </div>
 
-      <div 
-        className="total-display"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div className="sport-header">
+      <div className="total-display">
+        <div className="sport-header" onClick={toggleSportsMenu}>
           <div className="logo-placeholder">{selectedSportData?.emoji}</div>
           <span className="sport-name">{selectedSport}</span>
         </div>
@@ -190,13 +151,7 @@ function App() {
       <div className="split-container">
         <div 
           className="side red-side" 
-          onTouchEnd={(e) => {
-            e.stopPropagation();
-            if (!activeInput && !isMenuGesture) {
-              handleSideClick('loss');
-            }
-          }}
-          onClick={() => !activeInput && !isMenuGesture && handleSideClick('loss')}
+          onClick={() => !activeInput && handleSideClick('loss')}
         >
           {activeInput === 'loss' && (
             <div className="input-container">
@@ -214,7 +169,6 @@ function App() {
                     handleInputBlur();
                   }
                 }}
-                onTouchEnd={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
                 className="inline-input red-input"
                 autoFocus
@@ -233,13 +187,7 @@ function App() {
         
         <div 
           className="side green-side" 
-          onTouchEnd={(e) => {
-            e.stopPropagation();
-            if (!activeInput && !isMenuGesture) {
-              handleSideClick('win');
-            }
-          }}
-          onClick={() => !activeInput && !isMenuGesture && handleSideClick('win')}
+          onClick={() => !activeInput && handleSideClick('win')}
         >
           {activeInput === 'win' && (
             <div className="input-container">
@@ -257,7 +205,6 @@ function App() {
                     handleInputBlur();
                   }
                 }}
-                onTouchEnd={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
                 className="inline-input green-input"
                 autoFocus
