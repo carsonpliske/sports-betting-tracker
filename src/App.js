@@ -100,12 +100,7 @@ function App() {
   const selectedSportData = sports.find(s => s.name === selectedSport);
 
   return (
-    <div 
-      className="App" 
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="App">
       {/* Hidden Sports Menu */}
       <div 
         className="sports-menu" 
@@ -123,7 +118,12 @@ function App() {
         ))}
       </div>
 
-      <div className="total-display">
+      <div 
+        className="total-display"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <div className="sport-header">
           <div className="logo-placeholder">{selectedSportData?.emoji}</div>
           <span className="sport-name">{selectedSport}</span>
@@ -135,7 +135,16 @@ function App() {
       </div>
       
       <div className="split-container">
-        <div className="side red-side" onClick={() => !activeInput && !isMenuGesture && handleSideClick('loss')}>
+        <div 
+          className="side red-side" 
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            if (!activeInput && !isMenuGesture) {
+              handleSideClick('loss');
+            }
+          }}
+          onClick={() => !activeInput && !isMenuGesture && handleSideClick('loss')}
+        >
           {activeInput === 'loss' && (
             <input
               type="tel"
@@ -144,6 +153,7 @@ function App() {
               onChange={(e) => setAmount(e.target.value)}
               onKeyPress={handleInputKeyPress}
               onBlur={handleInputBlur}
+              onTouchEnd={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
               className="inline-input red-input"
               autoFocus
@@ -151,7 +161,16 @@ function App() {
           )}
         </div>
         
-        <div className="side green-side" onClick={() => !activeInput && !isMenuGesture && handleSideClick('win')}>
+        <div 
+          className="side green-side" 
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            if (!activeInput && !isMenuGesture) {
+              handleSideClick('win');
+            }
+          }}
+          onClick={() => !activeInput && !isMenuGesture && handleSideClick('win')}
+        >
           {activeInput === 'win' && (
             <input
               type="tel"
@@ -160,6 +179,7 @@ function App() {
               onChange={(e) => setAmount(e.target.value)}
               onKeyPress={handleInputKeyPress}
               onBlur={handleInputBlur}
+              onTouchEnd={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
               className="inline-input green-input"
               autoFocus
