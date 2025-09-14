@@ -64,9 +64,15 @@ function App() {
     const currentY = e.touches[0].clientY;
     const deltaY = currentY - touchStartY;
     
+    // Pull down from top to open menu
     if (touchStartY < 50 && deltaY > 0) {
       const offset = Math.min(deltaY - 50, 150);
       setMenuOffset(-100 + (offset / 150) * 100);
+    }
+    // Swipe up when menu is open to close it
+    else if (menuOffset > -100 && deltaY < 0) {
+      const closeOffset = Math.max(menuOffset + (deltaY / 150) * 100, -100);
+      setMenuOffset(closeOffset);
     }
   };
 
