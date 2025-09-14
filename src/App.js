@@ -130,8 +130,8 @@ function App() {
         <div className="side red-side" onClick={() => !activeInput && handleSideClick('loss')}>
           {activeInput === 'loss' && (
             <input
-              type="number"
-              step="0.01"
+              type="tel"
+              inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               onKeyPress={handleInputKeyPress}
@@ -146,8 +146,8 @@ function App() {
         <div className="side green-side" onClick={() => !activeInput && handleSideClick('win')}>
           {activeInput === 'win' && (
             <input
-              type="number"
-              step="0.01"
+              type="tel"
+              inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               onKeyPress={handleInputKeyPress}
