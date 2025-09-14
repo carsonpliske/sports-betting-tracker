@@ -23,8 +23,9 @@ function App() {
     setAmount('');
   };
 
-  const handleInputKeyPress = (e) => {
-    if (e.key === 'Enter') {
+  const handleInputKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === 'Done') {
+      e.preventDefault();
       handleSubmit();
     }
   };
@@ -146,18 +147,20 @@ function App() {
           onClick={() => !activeInput && !isMenuGesture && handleSideClick('loss')}
         >
           {activeInput === 'loss' && (
-            <input
-              type="tel"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              onKeyPress={handleInputKeyPress}
-              onBlur={handleInputBlur}
-              onTouchEnd={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              className="inline-input red-input"
-              autoFocus
-            />
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+              <input
+                type="tel"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onBlur={handleInputBlur}
+                onTouchEnd={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-input red-input"
+                autoFocus
+              />
+            </form>
           )}
         </div>
         
@@ -172,18 +175,20 @@ function App() {
           onClick={() => !activeInput && !isMenuGesture && handleSideClick('win')}
         >
           {activeInput === 'win' && (
-            <input
-              type="tel"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              onKeyPress={handleInputKeyPress}
-              onBlur={handleInputBlur}
-              onTouchEnd={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              className="inline-input green-input"
-              autoFocus
-            />
+            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+              <input
+                type="tel"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onBlur={handleInputBlur}
+                onTouchEnd={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-input green-input"
+                autoFocus
+              />
+            </form>
           )}
         </div>
       </div>
