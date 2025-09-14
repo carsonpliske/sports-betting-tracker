@@ -234,21 +234,168 @@
   font-size: 0.9rem;
 }
 
+/* Calendar Styles */
+.calendar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000000;
+  z-index: 2000;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.calendar-overlay.open {
+  transform: translateX(0);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.calendar-title {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.nav-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.weekday {
+  text-align: center;
+  color: #888;
+  font-weight: 600;
+  padding: 10px 0;
+  font-size: 0.9rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 30px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  background: #111;
+  position: relative;
+  min-height: 60px;
+}
+
+.calendar-day.other-month {
+  opacity: 0.3;
+}
+
+.calendar-day.positive-day {
+  background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.calendar-day.negative-day {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.day-number {
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+}
+
+.day-amount {
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.calendar-footer {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 @media (max-width: 768px) {
   .total-display h1 {
     font-size: 2rem;
   }
-  
+
   .inline-input {
     font-size: 2.5rem;
     padding: 15px;
   }
-  
+
   .sport-emoji {
     font-size: 1.5rem;
   }
-  
+
   .sport-text {
     font-size: 0.8rem;
+  }
+
+  .calendar-day {
+    min-height: 50px;
+  }
+
+  .day-number {
+    font-size: 0.8rem;
+  }
+
+  .day-amount {
+    font-size: 0.6rem;
+  }
+
+  .calendar-title {
+    font-size: 1.3rem;
   }
 }

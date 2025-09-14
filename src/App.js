@@ -47,6 +47,10 @@ function App() {
     return getMostUsedSport();
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchStartY, setTouchStartY] = useState(0);
   useEffect(() => {
     localStorage.setItem('betting-transactions-all', JSON.stringify(allTransactions));
   }, [allTransactions]);
@@ -112,15 +116,104 @@ function App() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartX || !touchStartY) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const deltaX = touchStartX - touchEndX;
+    const deltaY = touchStartY - touchEndY;
+
+    // Check if it's a horizontal swipe (more horizontal than vertical)
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Left swipe (deltaX > 0) and significant distance
+      if (deltaX > 50) {
+        setIsCalendarOpen(true);
+      }
+      // Right swipe (deltaX < 0) to close calendar
+      else if (deltaX < -50 && isCalendarOpen) {
+        setIsCalendarOpen(false);
+      }
+    }
+
+    setTouchStartX(0);
+    setTouchStartY(0);
+  };
+
   const handleSportSelect = (sport) => {
     setSelectedSport(sport);
     setIsMenuOpen(false);
   };
 
+  // Calendar functions
+  const getDailyTotals = (year, month) => {
+    const sportTransactions = allTransactions[selectedSport] || [];
+    const dailyTotals = {};
+
+    sportTransactions.forEach(transaction => {
+      const date = new Date(transaction.date);
+      if (date.getFullYear() === year && date.getMonth() === month) {
+        const day = date.getDate();
+        if (!dailyTotals[day]) {
+          dailyTotals[day] = 0;
+        }
+        dailyTotals[day] += transaction.amount;
+      }
+    });
+
+    return dailyTotals;
+  };
+
+  const changeCalendarMonth = (direction) => {
+    const newDate = new Date(currentCalendarDate);
+    newDate.setMonth(newDate.getMonth() + direction);
+    setCurrentCalendarDate(newDate);
+  };
+
+  const formatMonthYear = (date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  const generateCalendarDays = () => {
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    const dailyTotals = getDailyTotals(year, month);
+
+    const firstDay = new Date(year, month, 1);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+    const days = [];
+    for (let i = 0; i < 42; i++) {
+      const currentDay = new Date(startDate);
+      currentDay.setDate(startDate.getDate() + i);
+
+      const isCurrentMonth = currentDay.getMonth() === month;
+      const dayNumber = currentDay.getDate();
+      const total = isCurrentMonth ? (dailyTotals[dayNumber] || 0) : 0;
+
+      days.push({
+        date: currentDay,
+        dayNumber,
+        isCurrentMonth,
+        total,
+        hasTransactions: isCurrentMonth && dailyTotals[dayNumber] !== undefined
+      });
+    }
+
+    return days;
+  };
+
   const selectedSportData = sports.find(s => s.name === selectedSport);
 
   return (
-    <div className="App">
+    <div className="App" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       {/* Sports Menu */}
       <div
         className={`sports-menu ${isMenuOpen ? 'open' : ''}`}
@@ -135,6 +228,36 @@ function App() {
             <span className="sport-text">{sport.name}</span>
           </div>
         ))}
+      </div>
+
+      {/* Calendar Component */}
+      <div className={`calendar-overlay ${isCalendarOpen ? 'open' : ''}`}>
+        <div className="calendar-header">
+          <button onClick={() => changeCalendarMonth(-1)} className="nav-btn">‹</button>
+          <h2 className="calendar-title">{formatMonthYear(currentCalendarDate)}</h2>
+          <button onClick={() => changeCalendarMonth(1)} className="nav-btn">›</button>
+        </div>
+        <div className="calendar-weekdays">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+            <div key={index} className="weekday">{day}</div>
+          ))}
+        </div>
+        <div className="calendar-grid">
+          {generateCalendarDays().map((day, index) => (
+            <div
+              key={index}
+              className={`calendar-day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.hasTransactions ? (day.total >= 0 ? 'positive-day' : 'negative-day') : ''}`}
+            >
+              <span className="day-number">{day.dayNumber}</span>
+              {day.hasTransactions && (
+                <span className="day-amount">${Math.abs(day.total).toFixed(0)}</span>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="calendar-footer">
+          <button onClick={() => setIsCalendarOpen(false)} className="close-btn">Close</button>
+        </div>
       </div>
 
       <div className="total-display">
