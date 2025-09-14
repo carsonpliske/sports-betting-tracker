@@ -8,7 +8,44 @@ function App() {
   });
   const [activeInput, setActiveInput] = useState('');
   const [amount, setAmount] = useState('');
-  const [selectedSport, setSelectedSport] = useState('NBA');
+  const [selectedSport, setSelectedSport] = useState(() => {
+    // Function to get most used sport in past month
+    const getMostUsedSport = () => {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+      const saved = localStorage.getItem('betting-transactions-all');
+      if (!saved) return 'NBA';
+
+      const allTransactions = JSON.parse(saved);
+      const sportCounts = {};
+
+      // Count transactions for each sport in the past month
+      Object.keys(allTransactions).forEach(sport => {
+        const transactions = allTransactions[sport] || [];
+        const recentTransactions = transactions.filter(transaction => {
+          const transactionDate = new Date(transaction.date);
+          return transactionDate >= oneMonthAgo;
+        });
+        sportCounts[sport] = recentTransactions.length;
+      });
+
+      // Find sport with most transactions
+      let mostUsedSport = 'NBA'; // default fallback
+      let maxCount = 0;
+
+      Object.keys(sportCounts).forEach(sport => {
+        if (sportCounts[sport] > maxCount) {
+          maxCount = sportCounts[sport];
+          mostUsedSport = sport;
+        }
+      });
+
+      return mostUsedSport;
+    };
+
+    return getMostUsedSport();
+  });
   const [touchStartY, setTouchStartY] = useState(0);
   const [menuOffset, setMenuOffset] = useState(-100);
   const [isMenuGesture, setIsMenuGesture] = useState(false);
