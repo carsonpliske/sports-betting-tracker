@@ -327,22 +327,20 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 3px;
-  margin-bottom: auto;
-  flex: 1;
-  max-height: calc(100vh - 200px);
+  height: calc(100vh - 160px);
+  overflow: hidden;
 }
 
 .calendar-day {
-  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 6px;
-  border-radius: 8px;
+  padding: 4px;
+  border-radius: 6px;
   background: #111;
   position: relative;
-  min-height: 70px;
+  min-height: 60px;
 }
 
 .calendar-day.other-month {
@@ -411,38 +409,39 @@
   }
 
   .calendar-day {
-    min-height: 85px;
-    padding: 8px;
+    min-height: 65px;
+    padding: 4px;
   }
 
   .day-number {
-    font-size: 1rem;
-    margin-bottom: 4px;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
   }
 
   .day-amount {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
   }
 
   .calendar-title {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 
   .monthly-total {
-    font-size: 1.1rem;
-    padding: 6px 16px;
+    font-size: 1rem;
+    padding: 4px 12px;
   }
 
   .calendar-header {
-    margin-bottom: 30px;
+    margin-bottom: 20px;
   }
 
   .calendar-grid {
-    gap: 4px;
-    max-height: calc(100vh - 220px);
+    gap: 2px;
+    height: calc(100vh - 180px);
+    max-height: none;
   }
 
   .calendar-footer {
-    padding: 30px 0;
+    padding: 20px 0;
   }
 }
