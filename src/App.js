@@ -132,7 +132,7 @@ function App() {
 
     // Check if it's a horizontal swipe (more horizontal than vertical)
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      // Left swipe (deltaX > 0) and significant distance
+      // Left swipe (deltaX > 0) and significant distance - open calendar
       if (deltaX > 50) {
         setIsCalendarOpen(true);
       }
@@ -178,6 +178,14 @@ function App() {
 
   const formatMonthYear = (date) => {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  const getMonthlyTotal = () => {
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    const dailyTotals = getDailyTotals(year, month);
+
+    return Object.values(dailyTotals).reduce((sum, amount) => sum + amount, 0);
   };
 
   const generateCalendarDays = () => {
@@ -234,7 +242,12 @@ function App() {
       <div className={`calendar-overlay ${isCalendarOpen ? 'open' : ''}`}>
         <div className="calendar-header">
           <button onClick={() => changeCalendarMonth(-1)} className="nav-btn">‹</button>
-          <h2 className="calendar-title">{formatMonthYear(currentCalendarDate)}</h2>
+          <div className="calendar-title-section">
+            <h2 className="calendar-title">{formatMonthYear(currentCalendarDate)}</h2>
+            <div className={`monthly-total ${getMonthlyTotal() >= 0 ? 'positive' : 'negative'}`}>
+              Total: ${getMonthlyTotal().toFixed(2)}
+            </div>
+          </div>
           <button onClick={() => changeCalendarMonth(1)} className="nav-btn">›</button>
         </div>
         <div className="calendar-weekdays">
