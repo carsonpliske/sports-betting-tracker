@@ -51,6 +51,9 @@ function App() {
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchStartY, setTouchStartY] = useState(0);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
   useEffect(() => {
     localStorage.setItem('betting-transactions-all', JSON.stringify(allTransactions));
   }, [allTransactions]);
@@ -109,7 +112,8 @@ function App() {
     { name: 'NBA', emoji: '🏀' },
     { name: 'NFL', emoji: '🏈' },
     { name: 'MLB', emoji: '⚾' },
-    { name: 'UFC', emoji: '🥊' }
+    { name: 'UFC', emoji: '🥊' },
+    { name: 'CFB', emoji: '🏈' }
   ];
 
   const toggleSportsMenu = () => {
@@ -218,7 +222,99 @@ function App() {
     return days;
   };
 
+  const handleDayClick = (day) => {
+    if (day.hasTransactions) {
+      setSelectedDay(day);
+      setIsDayDetailsOpen(true);
+    }
+  };
+
+  const getDayTransactions = (day) => {
+    if (!day) return [];
+
+    const sportTransactions = allTransactions[selectedSport] || [];
+    return sportTransactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      const dayDate = day.date;
+      return (
+        transactionDate.getDate() === dayDate.getDate() &&
+        transactionDate.getMonth() === dayDate.getMonth() &&
+        transactionDate.getFullYear() === dayDate.getFullYear()
+      );
+    });
+  };
+
+  const handleEditTransaction = (transaction) => {
+    setEditingTransaction(transaction);
+  };
+
+  const handleUpdateTransaction = (updatedTransaction) => {
+    const sportTransactions = allTransactions[selectedSport] || [];
+    const updatedTransactions = {
+      ...allTransactions,
+      [selectedSport]: sportTransactions.map(t =>
+        t.id === updatedTransaction.id ? updatedTransaction : t
+      )
+    };
+    setAllTransactions(updatedTransactions);
+    setEditingTransaction(null);
+  };
+
+  const handleDeleteTransaction = (transactionId) => {
+    const sportTransactions = allTransactions[selectedSport] || [];
+    const updatedTransactions = {
+      ...allTransactions,
+      [selectedSport]: sportTransactions.filter(t => t.id !== transactionId)
+    };
+    setAllTransactions(updatedTransactions);
+  };
+
   const selectedSportData = sports.find(s => s.name === selectedSport);
+
+  // TransactionEditForm component
+  const TransactionEditForm = ({ transaction, onSave, onCancel }) => {
+    const [editAmount, setEditAmount] = useState(Math.abs(transaction.amount).toString());
+    const [editType, setEditType] = useState(transaction.type);
+
+    const handleSave = () => {
+      if (!editAmount || isNaN(editAmount)) return;
+
+      const updatedTransaction = {
+        ...transaction,
+        amount: editType === 'loss' ? -parseFloat(editAmount) : parseFloat(editAmount),
+        type: editType
+      };
+
+      onSave(updatedTransaction);
+    };
+
+    return (
+      <div className="transaction-edit-form">
+        <div className="edit-form-row">
+          <select
+            value={editType}
+            onChange={(e) => setEditType(e.target.value)}
+            className="edit-type-select"
+          >
+            <option value="win">Win</option>
+            <option value="loss">Loss</option>
+          </select>
+          <input
+            type="tel"
+            inputMode="decimal"
+            value={editAmount}
+            onChange={(e) => setEditAmount(e.target.value)}
+            className="edit-amount-input"
+            placeholder="Amount"
+          />
+        </div>
+        <div className="edit-form-actions">
+          <button onClick={handleSave} className="save-btn">Save</button>
+          <button onClick={onCancel} className="cancel-btn">Cancel</button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="App" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
@@ -259,7 +355,8 @@ function App() {
           {generateCalendarDays().map((day, index) => (
             <div
               key={index}
-              className={`calendar-day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.hasTransactions ? (day.total >= 0 ? 'positive-day' : 'negative-day') : ''}`}
+              className={`calendar-day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.hasTransactions ? (day.total >= 0 ? 'positive-day' : 'negative-day') : ''} ${day.hasTransactions ? 'clickable' : ''}`}
+              onClick={() => handleDayClick(day)}
             >
               <span className="day-number">{day.dayNumber}</span>
               {day.hasTransactions && (
@@ -270,6 +367,73 @@ function App() {
         </div>
         <div className="calendar-footer">
           <button onClick={() => setIsCalendarOpen(false)} className="close-btn">Close</button>
+        </div>
+      </div>
+
+      {/* Day Details Modal */}
+      <div className={`day-details-overlay ${isDayDetailsOpen ? 'open' : ''}`}>
+        <div className="day-details-modal">
+          <div className="day-details-header">
+            <h2>
+              {selectedDay && selectedDay.date.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+              })}
+            </h2>
+            <button
+              onClick={() => setIsDayDetailsOpen(false)}
+              className="close-day-details-btn"
+            >
+              ×
+            </button>
+          </div>
+          <div className="day-transactions">
+            {selectedDay && getDayTransactions(selectedDay).map((transaction) => (
+              <div key={transaction.id} className="transaction-item">
+                {editingTransaction?.id === transaction.id ? (
+                  <TransactionEditForm
+                    transaction={transaction}
+                    onSave={handleUpdateTransaction}
+                    onCancel={() => setEditingTransaction(null)}
+                  />
+                ) : (
+                  <div className={`transaction-display ${transaction.type}`}>
+                    <div className="transaction-info">
+                      <span className="transaction-type">
+                        {transaction.type === 'win' ? '🟢 Win' : '🔴 Loss'}
+                      </span>
+                      <span className={`transaction-amount ${transaction.amount >= 0 ? 'positive' : 'negative'}`}>
+                        ${Math.abs(transaction.amount).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="transaction-actions">
+                      <button
+                        onClick={() => handleEditTransaction(transaction)}
+                        className="edit-btn"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTransaction(transaction.id)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="day-total">
+            <strong>
+              Day Total:
+              <span className={`${selectedDay && selectedDay.total >= 0 ? 'positive' : 'negative'}`}>
+                ${selectedDay ? selectedDay.total.toFixed(2) : '0.00'}
+              </span>
+            </strong>
+          </div>
         </div>
       </div>
 

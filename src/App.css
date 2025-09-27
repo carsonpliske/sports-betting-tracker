@@ -390,6 +390,233 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Clickable calendar day styles */
+.calendar-day.clickable {
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.calendar-day.clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.calendar-day.clickable:active {
+  transform: scale(0.98);
+}
+
+/* Day Details Modal Styles */
+.day-details-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.day-details-overlay.open {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.day-details-modal {
+  background: #111;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  min-width: 300px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.day-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 15px;
+}
+
+.day-details-header h2 {
+  color: white;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.close-day-details-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.close-day-details-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.day-transactions {
+  margin-bottom: 20px;
+}
+
+.transaction-item {
+  margin-bottom: 12px;
+}
+
+.transaction-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  background: #222;
+}
+
+.transaction-display.win {
+  border-left: 4px solid #28a745;
+}
+
+.transaction-display.loss {
+  border-left: 4px solid #dc3545;
+}
+
+.transaction-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.transaction-type {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.transaction-amount {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.transaction-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-btn, .delete-btn, .save-btn, .cancel-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.edit-btn {
+  background: #007bff;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #0056b3;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+}
+
+.save-btn {
+  background: #28a745;
+  color: white;
+}
+
+.save-btn:hover {
+  background: #218838;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
+}
+
+.day-total {
+  text-align: center;
+  padding: 15px;
+  border-top: 1px solid #333;
+  color: white;
+  font-size: 1.1rem;
+}
+
+/* Transaction Edit Form Styles */
+.transaction-edit-form {
+  background: #333;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.edit-form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.edit-type-select {
+  background: #444;
+  color: white;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.edit-amount-input {
+  background: #444;
+  color: white;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 0.9rem;
+  flex: 2;
+}
+
+.edit-amount-input:focus, .edit-type-select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.edit-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 @media (max-width: 768px) {
   .total-display h1 {
     font-size: 2rem;
@@ -443,5 +670,35 @@
 
   .calendar-footer {
     padding: 20px 0;
+  }
+
+  .day-details-modal {
+    max-width: 95vw;
+    max-height: 85vh;
+    padding: 15px;
+  }
+
+  .day-details-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .transaction-display {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .transaction-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .edit-form-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .edit-type-select, .edit-amount-input {
+    flex: none;
   }
 }
