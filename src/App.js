@@ -303,33 +303,48 @@ function App() {
     const [newType, setNewType] = useState('win');
 
     const handleSave = () => {
-      if (!newAmount || isNaN(newAmount)) return;
+      const amount = parseFloat(newAmount);
+      if (!newAmount || isNaN(amount) || amount <= 0) return;
       onSave(newType, newAmount);
     };
 
     return (
-      <div className="transaction-edit-form">
-        <div className="edit-form-row">
-          <select
-            value={newType}
-            onChange={(e) => setNewType(e.target.value)}
-            className="edit-type-select"
+      <div className="new-transaction-form">
+        <div className="type-selection">
+          <button
+            type="button"
+            className={`type-btn win-btn ${newType === 'win' ? 'selected' : ''}`}
+            onClick={() => setNewType('win')}
           >
-            <option value="win">Win</option>
-            <option value="loss">Loss</option>
-          </select>
+            🟢 Win
+          </button>
+          <button
+            type="button"
+            className={`type-btn loss-btn ${newType === 'loss' ? 'selected' : ''}`}
+            onClick={() => setNewType('loss')}
+          >
+            🔴 Loss
+          </button>
+        </div>
+        <div className="amount-input-section">
           <input
             type="tel"
             inputMode="decimal"
             value={newAmount}
             onChange={(e) => setNewAmount(e.target.value)}
-            className="edit-amount-input"
-            placeholder="Amount"
+            className="new-amount-input"
+            placeholder="Enter amount"
             autoFocus
           />
         </div>
-        <div className="edit-form-actions">
-          <button onClick={handleSave} className="save-btn">Add</button>
+        <div className="form-actions">
+          <button
+            onClick={handleSave}
+            className="save-btn"
+            disabled={!newAmount || isNaN(parseFloat(newAmount)) || parseFloat(newAmount) <= 0}
+          >
+            Add {newType === 'win' ? 'Win' : 'Loss'}
+          </button>
           <button onClick={onCancel} className="cancel-btn">Cancel</button>
         </div>
       </div>
