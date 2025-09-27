@@ -678,6 +678,9 @@
   transition: all 0.2s ease;
   background: #444;
   color: white;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
 .type-btn:hover {

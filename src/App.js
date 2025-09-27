@@ -271,7 +271,11 @@ function App() {
   };
 
   const handleAddNewTransaction = (type, amount) => {
-    if (!selectedDay || !amount || isNaN(amount)) return;
+    const numAmount = parseFloat(amount);
+    if (!selectedDay || !amount || isNaN(numAmount) || numAmount <= 0) {
+      console.log('Invalid input:', { selectedDay, amount, numAmount });
+      return;
+    }
 
     // Create date for the selected day
     const transactionDate = new Date(selectedDay.date);
@@ -279,11 +283,13 @@ function App() {
 
     const newTransaction = {
       id: Date.now(),
-      amount: type === 'loss' ? -parseFloat(amount) : parseFloat(amount),
+      amount: type === 'loss' ? -numAmount : numAmount,
       sport: selectedSport,
       type: type,
       date: transactionDate.toISOString()
     };
+
+    console.log('Adding new transaction:', newTransaction);
 
     const currentTransactions = allTransactions[selectedSport] || [];
     const updatedTransactions = {
@@ -293,6 +299,14 @@ function App() {
 
     setAllTransactions(updatedTransactions);
     setIsAddingNew(false);
+
+    // Update the selected day to reflect the new transaction
+    const updatedDay = {
+      ...selectedDay,
+      hasTransactions: true,
+      total: (selectedDay.total || 0) + newTransaction.amount
+    };
+    setSelectedDay(updatedDay);
   };
 
   const selectedSportData = sports.find(s => s.name === selectedSport);
@@ -314,14 +328,22 @@ function App() {
           <button
             type="button"
             className={`type-btn win-btn ${newType === 'win' ? 'selected' : ''}`}
-            onClick={() => setNewType('win')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setNewType('win');
+            }}
           >
             🟢 Win
           </button>
           <button
             type="button"
             className={`type-btn loss-btn ${newType === 'loss' ? 'selected' : ''}`}
-            onClick={() => setNewType('loss')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setNewType('loss');
+            }}
           >
             🔴 Loss
           </button>
@@ -339,13 +361,28 @@ function App() {
         </div>
         <div className="form-actions">
           <button
-            onClick={handleSave}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleSave();
+            }}
             className="save-btn"
             disabled={!newAmount || isNaN(parseFloat(newAmount)) || parseFloat(newAmount) <= 0}
           >
             Add {newType === 'win' ? 'Win' : 'Loss'}
           </button>
-          <button onClick={onCancel} className="cancel-btn">Cancel</button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onCancel();
+            }}
+            className="cancel-btn"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     );
