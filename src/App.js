@@ -1,6 +1,128 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// NewTransactionForm component
+const NewTransactionForm = ({ onSave, onCancel }) => {
+  const [newAmount, setNewAmount] = useState('');
+  const [newType, setNewType] = useState('win');
+
+  const handleSave = () => {
+    const amount = parseFloat(newAmount);
+    if (!newAmount || isNaN(amount) || amount <= 0) return;
+    onSave(newType, newAmount);
+  };
+
+  return (
+    <div className="new-transaction-form">
+      <div className="type-selection">
+        <button
+          type="button"
+          className={`type-btn win-btn ${newType === 'win' ? 'selected' : ''}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setNewType('win');
+          }}
+        >
+          🟢 Win
+        </button>
+        <button
+          type="button"
+          className={`type-btn loss-btn ${newType === 'loss' ? 'selected' : ''}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setNewType('loss');
+          }}
+        >
+          🔴 Loss
+        </button>
+      </div>
+      <div className="amount-input-section">
+        <input
+          type="tel"
+          inputMode="decimal"
+          value={newAmount}
+          onChange={(e) => setNewAmount(e.target.value)}
+          className="new-amount-input"
+          placeholder="Enter amount"
+          autoFocus
+        />
+      </div>
+      <div className="form-actions">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSave();
+          }}
+          className="save-btn"
+          disabled={!newAmount || isNaN(parseFloat(newAmount)) || parseFloat(newAmount) <= 0}
+        >
+          Add {newType === 'win' ? 'Win' : 'Loss'}
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onCancel();
+          }}
+          className="cancel-btn"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// TransactionEditForm component
+const TransactionEditForm = ({ transaction, onSave, onCancel }) => {
+  const [editAmount, setEditAmount] = useState(Math.abs(transaction.amount).toString());
+  const [editType, setEditType] = useState(transaction.type);
+
+  const handleSave = () => {
+    if (!editAmount || isNaN(editAmount)) return;
+
+    const updatedTransaction = {
+      ...transaction,
+      amount: editType === 'loss' ? -parseFloat(editAmount) : parseFloat(editAmount),
+      type: editType
+    };
+
+    onSave(updatedTransaction);
+  };
+
+  return (
+    <div className="transaction-edit-form">
+      <div className="edit-form-row">
+        <select
+          value={editType}
+          onChange={(e) => setEditType(e.target.value)}
+          className="edit-type-select"
+        >
+          <option value="win">Win</option>
+          <option value="loss">Loss</option>
+        </select>
+        <input
+          type="tel"
+          inputMode="decimal"
+          value={editAmount}
+          onChange={(e) => setEditAmount(e.target.value)}
+          className="edit-amount-input"
+          placeholder="Amount"
+        />
+      </div>
+      <div className="edit-form-actions">
+        <button onClick={handleSave} className="save-btn">Save</button>
+        <button onClick={onCancel} className="cancel-btn">Cancel</button>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [allTransactions, setAllTransactions] = useState(() => {
     const saved = localStorage.getItem('betting-transactions-all');
@@ -310,128 +432,6 @@ function App() {
   };
 
   const selectedSportData = sports.find(s => s.name === selectedSport);
-
-  // NewTransactionForm component
-  const NewTransactionForm = ({ onSave, onCancel }) => {
-    const [newAmount, setNewAmount] = useState('');
-    const [newType, setNewType] = useState('win');
-
-    const handleSave = () => {
-      const amount = parseFloat(newAmount);
-      if (!newAmount || isNaN(amount) || amount <= 0) return;
-      onSave(newType, newAmount);
-    };
-
-    return (
-      <div className="new-transaction-form">
-        <div className="type-selection">
-          <button
-            type="button"
-            className={`type-btn win-btn ${newType === 'win' ? 'selected' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setNewType('win');
-            }}
-          >
-            🟢 Win
-          </button>
-          <button
-            type="button"
-            className={`type-btn loss-btn ${newType === 'loss' ? 'selected' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setNewType('loss');
-            }}
-          >
-            🔴 Loss
-          </button>
-        </div>
-        <div className="amount-input-section">
-          <input
-            type="tel"
-            inputMode="decimal"
-            value={newAmount}
-            onChange={(e) => setNewAmount(e.target.value)}
-            className="new-amount-input"
-            placeholder="Enter amount"
-            autoFocus
-          />
-        </div>
-        <div className="form-actions">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleSave();
-            }}
-            className="save-btn"
-            disabled={!newAmount || isNaN(parseFloat(newAmount)) || parseFloat(newAmount) <= 0}
-          >
-            Add {newType === 'win' ? 'Win' : 'Loss'}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onCancel();
-            }}
-            className="cancel-btn"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // TransactionEditForm component
-  const TransactionEditForm = ({ transaction, onSave, onCancel }) => {
-    const [editAmount, setEditAmount] = useState(Math.abs(transaction.amount).toString());
-    const [editType, setEditType] = useState(transaction.type);
-
-    const handleSave = () => {
-      if (!editAmount || isNaN(editAmount)) return;
-
-      const updatedTransaction = {
-        ...transaction,
-        amount: editType === 'loss' ? -parseFloat(editAmount) : parseFloat(editAmount),
-        type: editType
-      };
-
-      onSave(updatedTransaction);
-    };
-
-    return (
-      <div className="transaction-edit-form">
-        <div className="edit-form-row">
-          <select
-            value={editType}
-            onChange={(e) => setEditType(e.target.value)}
-            className="edit-type-select"
-          >
-            <option value="win">Win</option>
-            <option value="loss">Loss</option>
-          </select>
-          <input
-            type="tel"
-            inputMode="decimal"
-            value={editAmount}
-            onChange={(e) => setEditAmount(e.target.value)}
-            className="edit-amount-input"
-            placeholder="Amount"
-          />
-        </div>
-        <div className="edit-form-actions">
-          <button onClick={handleSave} className="save-btn">Save</button>
-          <button onClick={onCancel} className="cancel-btn">Cancel</button>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="App" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
