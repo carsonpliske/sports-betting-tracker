@@ -54,6 +54,7 @@ function App() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
   useEffect(() => {
     localStorage.setItem('betting-transactions-all', JSON.stringify(allTransactions));
   }, [allTransactions]);
@@ -223,7 +224,7 @@ function App() {
   };
 
   const handleDayClick = (day) => {
-    if (day.hasTransactions) {
+    if (day.isCurrentMonth) {
       setSelectedDay(day);
       setIsDayDetailsOpen(true);
     }
@@ -269,7 +270,71 @@ function App() {
     setAllTransactions(updatedTransactions);
   };
 
+  const handleAddNewTransaction = (type, amount) => {
+    if (!selectedDay || !amount || isNaN(amount)) return;
+
+    // Create date for the selected day
+    const transactionDate = new Date(selectedDay.date);
+    transactionDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
+    const newTransaction = {
+      id: Date.now(),
+      amount: type === 'loss' ? -parseFloat(amount) : parseFloat(amount),
+      sport: selectedSport,
+      type: type,
+      date: transactionDate.toISOString()
+    };
+
+    const currentTransactions = allTransactions[selectedSport] || [];
+    const updatedTransactions = {
+      ...allTransactions,
+      [selectedSport]: [...currentTransactions, newTransaction]
+    };
+
+    setAllTransactions(updatedTransactions);
+    setIsAddingNew(false);
+  };
+
   const selectedSportData = sports.find(s => s.name === selectedSport);
+
+  // NewTransactionForm component
+  const NewTransactionForm = ({ onSave, onCancel }) => {
+    const [newAmount, setNewAmount] = useState('');
+    const [newType, setNewType] = useState('win');
+
+    const handleSave = () => {
+      if (!newAmount || isNaN(newAmount)) return;
+      onSave(newType, newAmount);
+    };
+
+    return (
+      <div className="transaction-edit-form">
+        <div className="edit-form-row">
+          <select
+            value={newType}
+            onChange={(e) => setNewType(e.target.value)}
+            className="edit-type-select"
+          >
+            <option value="win">Win</option>
+            <option value="loss">Loss</option>
+          </select>
+          <input
+            type="tel"
+            inputMode="decimal"
+            value={newAmount}
+            onChange={(e) => setNewAmount(e.target.value)}
+            className="edit-amount-input"
+            placeholder="Amount"
+            autoFocus
+          />
+        </div>
+        <div className="edit-form-actions">
+          <button onClick={handleSave} className="save-btn">Add</button>
+          <button onClick={onCancel} className="cancel-btn">Cancel</button>
+        </div>
+      </div>
+    );
+  };
 
   // TransactionEditForm component
   const TransactionEditForm = ({ transaction, onSave, onCancel }) => {
@@ -355,7 +420,7 @@ function App() {
           {generateCalendarDays().map((day, index) => (
             <div
               key={index}
-              className={`calendar-day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.hasTransactions ? (day.total >= 0 ? 'positive-day' : 'negative-day') : ''} ${day.hasTransactions ? 'clickable' : ''}`}
+              className={`calendar-day ${!day.isCurrentMonth ? 'other-month' : ''} ${day.hasTransactions ? (day.total >= 0 ? 'positive-day' : 'negative-day') : ''} ${day.isCurrentMonth ? 'clickable' : ''}`}
               onClick={() => handleDayClick(day)}
             >
               <span className="day-number">{day.dayNumber}</span>
@@ -382,7 +447,11 @@ function App() {
               })}
             </h2>
             <button
-              onClick={() => setIsDayDetailsOpen(false)}
+              onClick={() => {
+                setIsDayDetailsOpen(false);
+                setIsAddingNew(false);
+                setEditingTransaction(null);
+              }}
               className="close-day-details-btn"
             >
               ×
@@ -425,6 +494,35 @@ function App() {
                 )}
               </div>
             ))}
+
+            {/* Add New Transaction Section */}
+            {selectedDay && !isAddingNew && (
+              <div className="add-transaction-section">
+                <button
+                  onClick={() => setIsAddingNew(true)}
+                  className="add-transaction-btn"
+                >
+                  + Add New Transaction
+                </button>
+              </div>
+            )}
+
+            {isAddingNew && (
+              <div className="transaction-item">
+                <NewTransactionForm
+                  onSave={handleAddNewTransaction}
+                  onCancel={() => setIsAddingNew(false)}
+                />
+              </div>
+            )}
+
+            {/* Show message for empty days */}
+            {selectedDay && getDayTransactions(selectedDay).length === 0 && !isAddingNew && (
+              <div className="empty-day-message">
+                <p>No transactions for this day.</p>
+                <p>Tap "Add New Transaction" to record a bet.</p>
+              </div>
+            )}
           </div>
           <div className="day-total">
             <strong>

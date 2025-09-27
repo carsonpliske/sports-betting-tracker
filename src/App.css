@@ -617,6 +617,41 @@
   justify-content: flex-end;
 }
 
+/* Add New Transaction Styles */
+.add-transaction-section {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.add-transaction-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  width: 100%;
+  max-width: 250px;
+}
+
+.add-transaction-btn:hover {
+  background: #0056b3;
+}
+
+.empty-day-message {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  font-style: italic;
+}
+
+.empty-day-message p {
+  margin: 5px 0;
+}
+
 @media (max-width: 768px) {
   .total-display h1 {
     font-size: 2rem;
