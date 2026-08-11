@@ -9,6 +9,59 @@ const CHART_RANGES = [
   { key: 'all', label: 'All' }
 ];
 
+// Haptic tick granularity while scrubbing, per selected range
+const TICK_UNIT_BY_RANGE = {
+  day: 'hour',
+  week: 'day',
+  month: 'day',
+  year: 'week',
+  all: 'month'
+};
+
+const HAPTIC_DURATION = 5;
+
+const isIOSDevice = () => {
+  if (typeof navigator === 'undefined') return false;
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+};
+
+// Fires a subtle haptic tick: the real Vibration API on Android/Chrome, or
+// the iOS Safari input[switch]-label-click quirk on iPhone. The iOS trick is
+// unofficial (Safari has no public haptics API) and only confirmed to work
+// on iOS 17.4-26.4 - it's a harmless no-op if a future iOS update closes it.
+const useHapticTick = () => {
+  const labelRef = useRef(null);
+  const isIOS = useRef(isIOSDevice());
+
+  useEffect(() => {
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.setAttribute('switch', '');
+    input.id = 'haptic-tick-switch';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    const label = document.createElement('label');
+    label.htmlFor = 'haptic-tick-switch';
+    label.style.display = 'none';
+    document.body.appendChild(label);
+    labelRef.current = label;
+
+    return () => {
+      document.body.removeChild(input);
+      document.body.removeChild(label);
+    };
+  }, []);
+
+  return () => {
+    if (isIOS.current) {
+      labelRef.current?.click();
+    } else if (navigator?.vibrate) {
+      navigator.vibrate(HAPTIC_DURATION);
+    }
+  };
+};
+
 // NewTransactionForm component
 const NewTransactionForm = ({ onSave, onCancel }) => {
   const [newAmount, setNewAmount] = useState('');
@@ -132,9 +185,11 @@ const TransactionEditForm = ({ transaction, onSave, onCancel }) => {
 };
 
 // LineChart component - touch-scrubbable equity curve
-const LineChart = ({ points }) => {
+const LineChart = ({ points, range }) => {
   const [scrubIndex, setScrubIndex] = useState(null);
   const containerRef = useRef(null);
+  const lastBucketRef = useRef(null);
+  const triggerHaptic = useHapticTick();
 
   if (points.length < 2) {
     return (
@@ -160,11 +215,44 @@ const LineChart = ({ points }) => {
   const activeIndex = scrubIndex !== null ? scrubIndex : lastIndex;
   const activePoint = points[activeIndex];
 
+  const domainStart = points[0].date.getTime();
+  const domainSpan = points[lastIndex].date.getTime() - domainStart || 1;
+  const tickUnit = TICK_UNIT_BY_RANGE[range] || 'day';
+
+  // Buckets the touch position into a calendar unit (hour/day/week/month) so
+  // the haptic tick fires once per boundary crossed, not once per pixel
+  const bucketForPct = (pct) => {
+    const timestamp = domainStart + pct * domainSpan;
+    const bucketDate = new Date(timestamp);
+    switch (tickUnit) {
+      case 'hour':
+        return `${bucketDate.getFullYear()}-${bucketDate.getMonth()}-${bucketDate.getDate()}-${bucketDate.getHours()}`;
+      case 'week':
+        return Math.floor(timestamp / (7 * 24 * 60 * 60 * 1000));
+      case 'month':
+        return `${bucketDate.getFullYear()}-${bucketDate.getMonth()}`;
+      default: // day
+        return `${bucketDate.getFullYear()}-${bucketDate.getMonth()}-${bucketDate.getDate()}`;
+    }
+  };
+
   const updateScrub = (clientX) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const pct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+
+    const bucket = bucketForPct(pct);
+    if (bucket !== lastBucketRef.current) {
+      lastBucketRef.current = bucket;
+      triggerHaptic();
+    }
+
     setScrubIndex(Math.round(pct * lastIndex));
+  };
+
+  const endScrub = () => {
+    lastBucketRef.current = null;
+    setScrubIndex(null);
   };
 
   const isIntraday = points[lastIndex].date - points[0].date <= 24 * 60 * 60 * 1000;
@@ -185,11 +273,11 @@ const LineChart = ({ points }) => {
         ref={containerRef}
         onTouchStart={(e) => updateScrub(e.touches[0].clientX)}
         onTouchMove={(e) => updateScrub(e.touches[0].clientX)}
-        onTouchEnd={() => setScrubIndex(null)}
+        onTouchEnd={endScrub}
         onMouseDown={(e) => updateScrub(e.clientX)}
         onMouseMove={(e) => { if (e.buttons === 1) updateScrub(e.clientX); }}
-        onMouseUp={() => setScrubIndex(null)}
-        onMouseLeave={() => setScrubIndex(null)}
+        onMouseUp={endScrub}
+        onMouseLeave={endScrub}
       >
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="line-chart-svg">
           <line
@@ -906,7 +994,7 @@ function App() {
             </button>
           ))}
         </div>
-        <LineChart points={chartPoints} />
+        <LineChart points={chartPoints} range={chartRange} />
         <div className="chart-stats-row">
           <div className="chart-stat">
             <span className="chart-stat-label">Peak</span>
