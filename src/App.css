@@ -188,6 +188,88 @@
   background: transparent;
 }
 
+.view-seasons-btn {
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.view-seasons-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Seasons Overlay */
+.seasons-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #000000;
+  z-index: 2500;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.seasons-overlay.open {
+  transform: translateX(0);
+}
+
+.seasons-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 10px 15px;
+  border-bottom: 1px solid #333;
+}
+
+.seasons-title {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.seasons-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.season-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  background: #111;
+}
+
+.season-label {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.season-total {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
 /* Sports Menu */
 .sports-menu {
   position: fixed;
@@ -799,6 +881,22 @@
 
   .calendar-header {
     margin-bottom: 20px;
+  }
+
+  .seasons-title {
+    font-size: 1.1rem;
+  }
+
+  .season-row {
+    padding: 12px;
+  }
+
+  .season-label {
+    font-size: 1rem;
+  }
+
+  .season-total {
+    font-size: 1.05rem;
   }
 
   .calendar-grid {

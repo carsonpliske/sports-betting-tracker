@@ -177,6 +177,7 @@ function App() {
   const [isDayDetailsOpen, setIsDayDetailsOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [isSeasonsOpen, setIsSeasonsOpen] = useState(false);
   useEffect(() => {
     localStorage.setItem('betting-transactions-all', JSON.stringify(allTransactions));
   }, [allTransactions]);
@@ -431,6 +432,52 @@ function App() {
     setSelectedDay(updatedDay);
   };
 
+  // Season helpers
+  // NBA/NFL/CFB span two calendar years (e.g. "2025-26"); MLB/UFC are single-year.
+  const getSeasonInfo = (sport, date) => {
+    const month = date.getMonth(); // 0 = Jan
+    const year = date.getFullYear();
+    const spanLabel = (startYear) => `${startYear}-${(startYear + 1).toString().slice(-2)}`;
+
+    switch (sport) {
+      case 'NBA': {
+        const startYear = month >= 9 ? year : year - 1; // season starts October
+        return { label: spanLabel(startYear), startYear };
+      }
+      case 'NFL': {
+        const startYear = month >= 8 ? year : year - 1; // season starts September
+        return { label: spanLabel(startYear), startYear };
+      }
+      case 'CFB': {
+        const startYear = month >= 7 ? year : year - 1; // season starts August
+        return { label: spanLabel(startYear), startYear };
+      }
+      default: // MLB, UFC - calendar year season
+        return { label: `${year}`, startYear: year };
+    }
+  };
+
+  const getSeasonTotals = (sport) => {
+    const sportTransactions = allTransactions[sport] || [];
+    const totalsByLabel = {};
+
+    sportTransactions.forEach((transaction) => {
+      const { label, startYear } = getSeasonInfo(sport, new Date(transaction.date));
+      if (!totalsByLabel[label]) {
+        totalsByLabel[label] = { label, startYear, total: 0 };
+      }
+      totalsByLabel[label].total += transaction.amount;
+    });
+
+    // Always show the current season, even before any bets are logged for it
+    const current = getSeasonInfo(sport, new Date());
+    if (!totalsByLabel[current.label]) {
+      totalsByLabel[current.label] = { label: current.label, startYear: current.startYear, total: 0 };
+    }
+
+    return Object.values(totalsByLabel).sort((a, b) => b.startYear - a.startYear);
+  };
+
   const selectedSportData = sports.find(s => s.name === selectedSport);
 
   return (
@@ -587,6 +634,32 @@ function App() {
         </div>
       </div>
 
+      {/* Seasons Overlay */}
+      <div className={`seasons-overlay ${isSeasonsOpen ? 'open' : ''}`}>
+        <div className="seasons-header">
+          <h2 className="seasons-title">{selectedSportData?.emoji} {selectedSport} Seasons</h2>
+          <button
+            onClick={() => setIsSeasonsOpen(false)}
+            className="close-day-details-btn"
+          >
+            ×
+          </button>
+        </div>
+        <div className="seasons-list">
+          {getSeasonTotals(selectedSport).map((season) => (
+            <div key={season.label} className="season-row">
+              <span className="season-label">{season.label}</span>
+              <span className={`season-total ${season.total >= 0 ? 'positive' : 'negative'}`}>
+                ${season.total.toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="calendar-footer">
+          <button onClick={() => setIsSeasonsOpen(false)} className="close-btn">Close</button>
+        </div>
+      </div>
+
       <div className="total-display">
         <div className="sport-header" onClick={toggleSportsMenu}>
           <div className="logo-placeholder">{selectedSportData?.emoji}</div>
@@ -596,8 +669,18 @@ function App() {
           ${total.toFixed(2)}
         </h1>
         <p>{total >= 0 ? 'Profit' : 'Loss'}</p>
+        <button
+          type="button"
+          className="view-seasons-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsSeasonsOpen(true);
+          }}
+        >
+          View Seasons
+        </button>
       </div>
-      
+
       <div className="split-container">
         <div 
           className="side red-side" 
