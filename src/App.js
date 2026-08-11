@@ -168,7 +168,6 @@ function App() {
 
     return getMostUsedSport();
   });
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [touchStartX, setTouchStartX] = useState(0);
@@ -184,7 +183,6 @@ function App() {
 
   // Get transactions for current sport
   const currentTransactions = allTransactions[selectedSport] || [];
-  const total = currentTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
 
   const handleSideClick = (type) => {
     setActiveInput(type);
@@ -240,10 +238,6 @@ function App() {
     { name: 'CFB', emoji: '🏈' }
   ];
 
-  const toggleSportsMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
   const handleTouchStart = (e) => {
     setTouchStartX(e.touches[0].clientX);
     setTouchStartY(e.touches[0].clientY);
@@ -276,7 +270,6 @@ function App() {
 
   const handleSportSelect = (sport) => {
     setSelectedSport(sport);
-    setIsMenuOpen(false);
   };
 
   // Calendar functions
@@ -478,23 +471,27 @@ function App() {
     return Object.values(totalsByLabel).sort((a, b) => b.startYear - a.startYear);
   };
 
+  // Main display shows the current season's profit/loss, not the all-time total
+  const currentSeasonInfo = getSeasonInfo(selectedSport, new Date());
+  const total = currentTransactions
+    .filter((transaction) => getSeasonInfo(selectedSport, new Date(transaction.date)).label === currentSeasonInfo.label)
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
+
   const selectedSportData = sports.find(s => s.name === selectedSport);
 
   return (
     <div className="App" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-      {/* Sports Menu */}
-      <div
-        className={`sports-menu ${isMenuOpen ? 'open' : ''}`}
-      >
+      {/* Sports Bar - always-visible sport selector */}
+      <div className="sports-bar">
         {sports.map((sport) => (
-          <div 
+          <button
             key={sport.name}
-            className="sport-option"
+            type="button"
+            className={`sports-bar-icon ${selectedSport === sport.name ? 'selected' : ''}`}
             onClick={() => handleSportSelect(sport.name)}
           >
-            <span className="sport-emoji">{sport.emoji}</span>
-            <span className="sport-text">{sport.name}</span>
-          </div>
+            {sport.emoji}
+          </button>
         ))}
       </div>
 
@@ -661,10 +658,11 @@ function App() {
       </div>
 
       <div className="total-display">
-        <div className="sport-header" onClick={toggleSportsMenu}>
+        <div className="sport-header">
           <div className="logo-placeholder">{selectedSportData?.emoji}</div>
           <span className="sport-name">{selectedSport}</span>
         </div>
+        <div className="season-tag">{currentSeasonInfo.label} Season</div>
         <h1 className={total >= 0 ? 'positive' : 'negative'}>
           ${total.toFixed(2)}
         </h1>
