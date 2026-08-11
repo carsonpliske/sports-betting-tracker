@@ -661,12 +661,11 @@ function App() {
         <div className="sport-header">
           <div className="logo-placeholder">{selectedSportData?.emoji}</div>
           <span className="sport-name">{selectedSport}</span>
+          <span className="season-tag">{currentSeasonInfo.label}</span>
         </div>
-        <div className="season-tag">{currentSeasonInfo.label} Season</div>
         <h1 className={total >= 0 ? 'positive' : 'negative'}>
           ${total.toFixed(2)}
         </h1>
-        <p>{total >= 0 ? 'Profit' : 'Loss'}</p>
         <button
           type="button"
           className="view-seasons-btn"
