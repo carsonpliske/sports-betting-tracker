@@ -68,73 +68,73 @@
   color: #dc3545;
 }
 
-.split-container {
-  flex: 1;
+/* Mini Bet Bar - condensed win/loss entry */
+.mini-bet-bar {
   display: flex;
+  height: 64px;
+  border-bottom: 2px solid #333;
 }
 
-.side {
+.mini-side {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.2s ease;
   position: relative;
+  transition: opacity 0.2s ease;
 }
 
-.side:active {
-  opacity: 0.8;
+.mini-side:active {
+  opacity: 0.85;
 }
 
-.red-side {
+.mini-red {
   background: linear-gradient(135deg, #dc3545, #c82333);
-  color: white;
 }
 
-.green-side {
+.mini-green {
   background: linear-gradient(135deg, #28a745, #20c997);
-  color: white;
 }
 
-.side-content {
-  text-align: center;
-}
-
-.side-content h2 {
-  font-size: 2rem;
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.side-content p {
-  font-size: 1rem;
-  opacity: 0.9;
-}
-
-
-/* Inline Input Styles */
-.input-container {
+.mini-input-container {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  margin: 0;
-  padding: 0;
 }
 
-.submit-overlay-btn {
+.mini-inline-input {
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-align: center;
+  width: 65%;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+.mini-inline-input::-webkit-outer-spin-button,
+.mini-inline-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.mini-submit-btn {
   position: absolute;
-  right: 20px;
+  right: 10px;
   background: rgba(255, 255, 255, 0.9);
   color: #333;
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -142,47 +142,150 @@
   font-weight: bold;
 }
 
-.inline-input {
-  border: none;
+/* Chart Section */
+.chart-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #000000;
+  padding: 12px 16px 16px;
+  min-height: 0;
+}
+
+.range-tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 10px;
+}
+
+.range-tab {
   background: transparent;
-  color: white;
-  font-size: 3rem;
-  font-weight: bold;
+  border: none;
+  color: #888;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.range-tab:hover {
+  color: #ccc;
+}
+
+.range-tab.selected {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.line-chart-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chart-scrub-label {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.chart-scrub-date {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.chart-scrub-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.line-chart-container {
+  flex: 1;
+  min-height: 120px;
+  touch-action: none;
+}
+
+.line-chart-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.chart-zero-line {
+  stroke: #333;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 4 4;
+}
+
+.chart-path {
+  fill: none;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-path.positive-line {
+  stroke: #28a745;
+}
+
+.chart-path.negative-line {
+  stroke: #dc3545;
+}
+
+.chart-scrub-line {
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.line-chart-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 0.9rem;
   text-align: center;
-  width: 90%;
-  outline: none;
   padding: 20px;
-  -webkit-appearance: none;
-  -moz-appearance: textfield;
 }
 
-/* Hide number input arrows/spinners */
-.inline-input::-webkit-outer-spin-button,
-.inline-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.chart-stats-row {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 14px;
+  margin-top: 10px;
+  border-top: 1px solid #222;
 }
 
-.inline-input[type=number] {
-  -moz-appearance: textfield;
+.chart-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
-.red-input {
-  background: transparent;
-  border: none;
+.chart-stat-label {
+  color: #888;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.green-input {
-  background: transparent;
-  border: none;
+.chart-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
 }
 
-.red-input:focus {
-  background: transparent;
-}
-
-.green-input:focus {
-  background: transparent;
+.chart-stat-date {
+  color: #666;
+  font-size: 0.75rem;
 }
 
 .view-seasons-btn {

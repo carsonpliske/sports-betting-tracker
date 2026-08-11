@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+
+const CHART_RANGES = [
+  { key: 'day', label: 'Day' },
+  { key: 'week', label: 'Week' },
+  { key: 'month', label: 'Month' },
+  { key: 'year', label: 'Year' },
+  { key: 'all', label: 'All' }
+];
 
 // NewTransactionForm component
 const NewTransactionForm = ({ onSave, onCancel }) => {
@@ -123,6 +131,93 @@ const TransactionEditForm = ({ transaction, onSave, onCancel }) => {
   );
 };
 
+// LineChart component - touch-scrubbable equity curve
+const LineChart = ({ points }) => {
+  const [scrubIndex, setScrubIndex] = useState(null);
+  const containerRef = useRef(null);
+
+  if (points.length < 2) {
+    return (
+      <div className="line-chart-empty">
+        <p>Not enough data yet for this range.</p>
+      </div>
+    );
+  }
+
+  const lastIndex = points.length - 1;
+  const values = points.map((p) => p.y);
+  const minY = Math.min(...values, 0);
+  const maxY = Math.max(...values, 0);
+  const spanY = maxY - minY || 1;
+
+  const xForIndex = (i) => (i / lastIndex) * 100;
+  const yForValue = (v) => 100 - ((v - minY) / spanY) * 100;
+
+  const pathD = points
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xForIndex(i).toFixed(2)} ${yForValue(p.y).toFixed(2)}`)
+    .join(' ');
+
+  const activeIndex = scrubIndex !== null ? scrubIndex : lastIndex;
+  const activePoint = points[activeIndex];
+
+  const updateScrub = (clientX) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const pct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    setScrubIndex(Math.round(pct * lastIndex));
+  };
+
+  const isIntraday = points[lastIndex].date - points[0].date <= 24 * 60 * 60 * 1000;
+  const formattedDate = isIntraday
+    ? activePoint.date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    : activePoint.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  return (
+    <div className="line-chart-wrapper">
+      <div className="chart-scrub-label">
+        <span className="chart-scrub-date">{formattedDate}</span>
+        <span className={`chart-scrub-value ${activePoint.y >= 0 ? 'positive' : 'negative'}`}>
+          ${activePoint.y.toFixed(2)}
+        </span>
+      </div>
+      <div
+        className="line-chart-container"
+        ref={containerRef}
+        onTouchStart={(e) => updateScrub(e.touches[0].clientX)}
+        onTouchMove={(e) => updateScrub(e.touches[0].clientX)}
+        onTouchEnd={() => setScrubIndex(null)}
+        onMouseDown={(e) => updateScrub(e.clientX)}
+        onMouseMove={(e) => { if (e.buttons === 1) updateScrub(e.clientX); }}
+        onMouseUp={() => setScrubIndex(null)}
+        onMouseLeave={() => setScrubIndex(null)}
+      >
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="line-chart-svg">
+          <line
+            x1="0"
+            y1={yForValue(0).toFixed(2)}
+            x2="100"
+            y2={yForValue(0).toFixed(2)}
+            className="chart-zero-line"
+          />
+          <path
+            d={pathD}
+            className={`chart-path ${activePoint.y >= 0 ? 'positive-line' : 'negative-line'}`}
+          />
+          {scrubIndex !== null && (
+            <line
+              x1={xForIndex(scrubIndex).toFixed(2)}
+              y1="0"
+              x2={xForIndex(scrubIndex).toFixed(2)}
+              y2="100"
+              className="chart-scrub-line"
+            />
+          )}
+        </svg>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [allTransactions, setAllTransactions] = useState(() => {
     const saved = localStorage.getItem('betting-transactions-all');
@@ -177,6 +272,7 @@ function App() {
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isSeasonsOpen, setIsSeasonsOpen] = useState(false);
+  const [chartRange, setChartRange] = useState('week');
   useEffect(() => {
     localStorage.setItem('betting-transactions-all', JSON.stringify(allTransactions));
   }, [allTransactions]);
@@ -477,6 +573,52 @@ function App() {
     .filter((transaction) => getSeasonInfo(selectedSport, new Date(transaction.date)).label === currentSeasonInfo.label)
     .reduce((sum, transaction) => sum + transaction.amount, 0);
 
+  // Builds a cumulative running-total series, reset to $0 at the start of the selected range
+  const getChartPoints = (sport, range) => {
+    const sportTransactions = (allTransactions[sport] || [])
+      .slice()
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const now = new Date();
+    let start;
+    switch (range) {
+      case 'day':
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case 'week':
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+        break;
+      case 'month':
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+        break;
+      case 'year':
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 364);
+        break;
+      default: // all
+        start = sportTransactions.length ? new Date(sportTransactions[0].date) : now;
+    }
+
+    const windowTransactions = sportTransactions.filter((t) => new Date(t.date) >= start);
+
+    const points = [{ date: start, y: 0 }];
+    let running = 0;
+    windowTransactions.forEach((t) => {
+      running += t.amount;
+      points.push({ date: new Date(t.date), y: running });
+    });
+
+    // Extend the line to "now" so it doesn't dead-end at the last bet
+    if (points[points.length - 1].date < now) {
+      points.push({ date: now, y: running });
+    }
+
+    return points;
+  };
+
+  const chartPoints = getChartPoints(selectedSport, chartRange);
+  const chartPeak = chartPoints.reduce((max, p) => (p.y > max.y ? p : max), chartPoints[0]);
+  const chartLow = chartPoints.reduce((min, p) => (p.y < min.y ? p : min), chartPoints[0]);
+
   const selectedSportData = sports.find(s => s.name === selectedSport);
 
   return (
@@ -493,6 +635,79 @@ function App() {
             {sport.emoji}
           </button>
         ))}
+      </div>
+
+      {/* Mini Bet Bar - condensed win/loss entry, replaces the old full-height split view */}
+      <div className="mini-bet-bar">
+        <div
+          className="mini-side mini-red"
+          onClick={() => !activeInput && handleSideClick('loss')}
+        >
+          {activeInput === 'loss' && (
+            <div className="mini-input-container">
+              <input
+                type="tel"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onBlur={() => {
+                  if (amount && amount.trim()) {
+                    handleSubmit();
+                  } else {
+                    handleInputBlur();
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="mini-inline-input"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="mini-submit-btn"
+                style={{ display: amount ? 'flex' : 'none' }}
+              >
+                ✓
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div
+          className="mini-side mini-green"
+          onClick={() => !activeInput && handleSideClick('win')}
+        >
+          {activeInput === 'win' && (
+            <div className="mini-input-container">
+              <input
+                type="tel"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onBlur={() => {
+                  if (amount && amount.trim()) {
+                    handleSubmit();
+                  } else {
+                    handleInputBlur();
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="mini-inline-input"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="mini-submit-btn"
+                style={{ display: amount ? 'flex' : 'none' }}
+              >
+                ✓
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Calendar Component */}
@@ -678,77 +893,39 @@ function App() {
         </button>
       </div>
 
-      <div className="split-container">
-        <div 
-          className="side red-side" 
-          onClick={() => !activeInput && handleSideClick('loss')}
-        >
-          {activeInput === 'loss' && (
-            <div className="input-container">
-              <input
-                type="tel"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                onKeyDown={handleInputKeyDown}
-                onBlur={(e) => {
-                  // Submit if there's a value when losing focus
-                  if (amount && amount.trim()) {
-                    handleSubmit();
-                  } else {
-                    handleInputBlur();
-                  }
-                }}
-                onClick={(e) => e.stopPropagation()}
-                className="inline-input red-input"
-                autoFocus
-              />
-              <button 
-                type="button"
-                onClick={handleSubmit}
-                className="submit-overlay-btn"
-                style={{ display: amount ? 'block' : 'none' }}
-              >
-                ✓
-              </button>
-            </div>
-          )}
+      <div className="chart-section">
+        <div className="range-tabs">
+          {CHART_RANGES.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              className={`range-tab ${chartRange === option.key ? 'selected' : ''}`}
+              onClick={() => setChartRange(option.key)}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
-        
-        <div 
-          className="side green-side" 
-          onClick={() => !activeInput && handleSideClick('win')}
-        >
-          {activeInput === 'win' && (
-            <div className="input-container">
-              <input
-                type="tel"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                onKeyDown={handleInputKeyDown}
-                onBlur={(e) => {
-                  // Submit if there's a value when losing focus
-                  if (amount && amount.trim()) {
-                    handleSubmit();
-                  } else {
-                    handleInputBlur();
-                  }
-                }}
-                onClick={(e) => e.stopPropagation()}
-                className="inline-input green-input"
-                autoFocus
-              />
-              <button 
-                type="button"
-                onClick={handleSubmit}
-                className="submit-overlay-btn"
-                style={{ display: amount ? 'block' : 'none' }}
-              >
-                ✓
-              </button>
-            </div>
-          )}
+        <LineChart points={chartPoints} />
+        <div className="chart-stats-row">
+          <div className="chart-stat">
+            <span className="chart-stat-label">Peak</span>
+            <span className={`chart-stat-value ${chartPeak.y >= 0 ? 'positive' : 'negative'}`}>
+              ${chartPeak.y.toFixed(2)}
+            </span>
+            <span className="chart-stat-date">
+              {chartPeak.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+          <div className="chart-stat">
+            <span className="chart-stat-label">Low</span>
+            <span className={`chart-stat-value ${chartLow.y >= 0 ? 'positive' : 'negative'}`}>
+              ${chartLow.y.toFixed(2)}
+            </span>
+            <span className="chart-stat-date">
+              {chartLow.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
         </div>
       </div>
     </div>
