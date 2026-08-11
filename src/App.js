@@ -434,11 +434,11 @@ function App() {
 
     switch (sport) {
       case 'NBA': {
-        const startYear = month >= 9 ? year : year - 1; // season starts October
+        const startYear = month >= 9 ? year : year - 1; // season starts with preseason in October
         return { label: spanLabel(startYear), startYear };
       }
       case 'NFL': {
-        const startYear = month >= 8 ? year : year - 1; // season starts September
+        const startYear = month >= 7 ? year : year - 1; // season starts with preseason in August
         return { label: spanLabel(startYear), startYear };
       }
       case 'CFB': {
