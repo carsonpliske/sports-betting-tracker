@@ -728,10 +728,10 @@ function App() {
       {/* Mini Bet Bar - condensed win/loss entry, replaces the old full-height split view */}
       <div className="mini-bet-bar">
         <div
-          className="mini-side mini-red"
+          className={`mini-side mini-red ${activeInput === 'loss' ? 'active-entry' : ''}`}
           onClick={() => !activeInput && handleSideClick('loss')}
         >
-          {activeInput === 'loss' && (
+          {activeInput === 'loss' ? (
             <div className="mini-input-container">
               <input
                 type="tel"
@@ -759,14 +759,16 @@ function App() {
                 ✓
               </button>
             </div>
+          ) : (
+            <span className="mini-symbol">−</span>
           )}
         </div>
 
         <div
-          className="mini-side mini-green"
+          className={`mini-side mini-green ${activeInput === 'win' ? 'active-entry' : ''}`}
           onClick={() => !activeInput && handleSideClick('win')}
         >
-          {activeInput === 'win' && (
+          {activeInput === 'win' ? (
             <div className="mini-input-container">
               <input
                 type="tel"
@@ -794,6 +796,8 @@ function App() {
                 ✓
               </button>
             </div>
+          ) : (
+            <span className="mini-symbol">+</span>
           )}
         </div>
       </div>
