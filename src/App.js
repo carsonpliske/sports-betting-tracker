@@ -634,6 +634,19 @@ function App() {
     }
   };
 
+  // Actual calendar start date for a season, matching the month cutovers in getSeasonInfo
+  const getSeasonStartDate = (sport, seasonInfo) => {
+    switch (sport) {
+      case 'NBA':
+        return new Date(seasonInfo.startYear, 9, 1); // October
+      case 'NFL':
+      case 'CFB':
+        return new Date(seasonInfo.startYear, 7, 1); // August
+      default: // MLB, UFC
+        return new Date(seasonInfo.startYear, 0, 1); // January
+    }
+  };
+
   const getSeasonTotals = (sport) => {
     const sportTransactions = allTransactions[sport] || [];
     const totalsByLabel = {};
@@ -680,9 +693,11 @@ function App() {
         start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
         break;
       case 'year':
-        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 364);
+        // "Year" tracks the current season (not a rolling 365 days), matching
+        // how the rest of the app defines seasons per sport
+        start = getSeasonStartDate(sport, getSeasonInfo(sport, now));
         break;
-      default: // all
+      default: // all - full history across every season combined
         start = sportTransactions.length ? new Date(sportTransactions[0].date) : now;
     }
 
